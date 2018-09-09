@@ -34,7 +34,8 @@
            hash-table-plist
            ensure-list
            assoc-value
-           doplist)
+           doplist
+           featurep)
   (:import-from :uiop/package
                 define-package)
   (:export define-package)
