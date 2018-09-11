@@ -36,10 +36,8 @@
            assoc-value
            doplist
            featurep)
-  (:import-from :uiop/package
-                define-package)
-  (:export define-package)
-  (:export log-errors
+  (:export define-package
+           log-errors
            with-hash-entries
            make-hash-table-with-entries
            stream->byte-array

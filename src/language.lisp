@@ -80,3 +80,14 @@
                                        (declare (ignore c))
                                        (funcall ,handler))))
      ,@body))
+
+
+(defmacro define-package (package &body clauses)
+  (flet ((filter-clause (clause)
+           (case (first clause)
+             (:reexport-from (list (append (list :import-from (second clause))
+                                           (cddr clause))
+                                   (append (list :export )
+                                           (cddr clause))))
+             (t (list clause)))))
+    `(uiop:define-package ,package ,@(reduce #'nconc (mapcar #'filter-clause clauses)))))
