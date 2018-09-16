@@ -51,7 +51,7 @@
 
 
 (defmacro parent-tree ((parent &optional child-ctor) &body children)
-  (once-only (child-ctor parent)
+  (with-gensyms (ctor)
     (labels ((expand-child (root)
                (when (atom root)
                  (error "Child descriptor must be a list, but got ~A" root))
@@ -59,10 +59,11 @@
                  (destructuring-bind (child-class &rest initargs-and-children) root
                    (multiple-value-bind (initargs children)
                        (bodge-util:parse-initargs-and-list initargs-and-children)
-                     `(let ((,parent (apply ,(or child-ctor #'make-instance) ',child-class ,@initargs)))
+                     `(let ((,parent (funcall ,ctor ',child-class ,@initargs)))
                         ,@(loop for child in children
                                 collect `(adopt ,parent ,(expand-child child)))
                         ,parent))))))
       `(prog1 ,parent
-         ,@(loop for child in (mapcar #'expand-child children)
-                 collect `(adopt ,parent ,child))))))
+         (let ((,ctor (or ,child-ctor #'make-instance)))
+           ,@(loop for child in (mapcar #'expand-child children)
+                   collect `(adopt ,parent ,child)))))))
