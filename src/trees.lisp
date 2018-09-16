@@ -48,3 +48,21 @@
               (:pre '%do-tree-preorder)
               (:post '%do-tree-preorder))))
     `(,fn ,root (lambda (,var) ,@body))))
+
+
+(defmacro parent-tree ((parent &optional child-ctor) &body children)
+  (once-only (child-ctor parent)
+    (labels ((expand-child (root)
+               (when (atom root)
+                 (error "Child descriptor must be a list, but got ~A" root))
+               (with-gensyms (parent)
+                 (destructuring-bind (child-class &rest initargs-and-children) root
+                   (multiple-value-bind (initargs children)
+                       (bodge-util:parse-initargs-and-list initargs-and-children)
+                     `(let ((,parent (apply ,(or child-ctor #'make-instance) ',child-class ,@initargs)))
+                        ,@(loop for child in children
+                                collect `(adopt ,parent ,(expand-child child)))
+                        ,parent))))))
+      `(prog1 ,parent
+         ,@(loop for child in (mapcar #'expand-child children)
+                 collect `(adopt ,parent ,child))))))

@@ -62,6 +62,7 @@
            dochildren
            children-of
            dotree
+           parent-tree
            search-sorted
            list->array
            reexporting
