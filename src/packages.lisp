@@ -1,5 +1,4 @@
 (uiop:define-package :bodge-util
-  (:nicknames :ge.util)
   (:use :cl :local-time :alexandria :split-sequence :static-vectors :trivial-gray-streams)
   (:export ; from :alexandria
            with-gensyms
