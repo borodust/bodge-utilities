@@ -86,4 +86,5 @@
            parse-initargs-and-list
            shout
            bind-for-serious-condition
-           with-simple-array-pointer))
+           with-simple-array-pointer
+           with-locale))
