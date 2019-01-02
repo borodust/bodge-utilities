@@ -68,10 +68,13 @@
 
 
 (defun parse-initargs-and-list (initargs-and-list)
-  (loop for (key . rest) on initargs-and-list by #'cddr
-        until (listp key)
-        append (list key (first rest)) into initargs
-        finally (return (values initargs (append (list key) rest)))))
+  (if (null initargs-and-list)
+      (values nil nil)
+      (loop for (key . rest) on initargs-and-list by #'cddr
+            until (listp key)
+            append (list key (first rest)) into initargs
+            finally (return (values initargs (when (listp key)
+                                               (append (list key) rest)))))))
 
 
 (defmacro bind-for-serious-condition ((handler) &body body)

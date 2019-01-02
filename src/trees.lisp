@@ -53,7 +53,7 @@
 (defmacro parent-tree ((parent &optional child-ctor) &body children)
   (with-gensyms (ctor)
     (labels ((expand-child (root)
-               (when (atom root)
+               (unless (listp root)
                  (error "Child descriptor must be a list, but got ~A" root))
                (with-gensyms (parent)
                  (destructuring-bind (child-class &rest initargs-and-children) root
