@@ -7,26 +7,29 @@
   `(progn ,@body))
 
 
-(defun invoke-continue-restart ()
-  (when-let ((continue-restart (find-restart 'continue)))
-    (invoke-restart continue-restart)))
+(defun raise-ignorable (e)
+  (block ignorable
+    (restart-case
+        (error e)
+      (ignore ()
+        :report "Skip condition"
+        (return-from ignorable)))))
 
 
 (defun invoke-bodgy (fu)
-  (block skippable
-    (macrolet ((with-error-report-string ((report) c &body body)
-                 (once-only (c)
-                   `(dissect:with-capped-stack ()
-                      (let ((,report (with-output-to-string (stream)
-                                       (format stream "Unhandled condition:~%")
-                                       (dissect:present ,c stream))))
-                        ,@body)))))
+  (macrolet ((with-error-report-string ((report) c &body body)
+               (once-only (c)
+                 `(dissect:with-capped-stack ()
+                    (let ((,report (with-output-to-string (stream)
+                                     (format stream "Unhandled condition:~%")
+                                     (dissect:present ,c stream))))
+                      ,@body)))))
+    (block skippable
       (handler-bind ((serious-condition (lambda (e)
                                           (with-error-report-string (error-text) e
                                             (log:error "~A" error-text)
                                             (in-development-mode
-                                              (break "~A: ~A" (type-of e) e)
-                                              (invoke-continue-restart))
+                                              (raise-ignorable e))
                                             (return-from skippable))))
                      (t (lambda (e)
                           (with-error-report-string (error-text) e
