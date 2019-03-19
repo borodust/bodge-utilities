@@ -87,4 +87,5 @@
            shout
            bind-for-serious-condition
            with-simple-array-pointer
-           with-locale))
+           with-locale
+           deflogger))

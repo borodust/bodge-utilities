@@ -57,3 +57,29 @@
 (defun shout (control-string &rest args)
   (format t "~&~A" (apply #'format nil control-string args))
   (finish-output t))
+
+
+(defmacro deflogger (name-and-opts)
+  (destructuring-bind (name &rest opts-alist) name-and-opts
+    (let ((logger-name (or (first (assoc-value opts-alist :name)) name)))
+      `(progn
+         (defmacro ,(symbolicate name '/trace) (control-string &rest args)
+           `(log:trace '(,',logger-name) ,control-string ,@args))
+
+         (defmacro ,(symbolicate name '/debug) (control-string &rest args)
+           `(log:debug '(,',logger-name) ,control-string ,@args))
+
+         (defmacro ,(symbolicate name '/info) (control-string &rest args)
+           `(log:info '(,',logger-name) ,control-string ,@args))
+
+         (defmacro ,(symbolicate name '/warn) (control-string &rest args)
+           `(log:warn '(,',logger-name) ,control-string ,@args))
+
+         (defmacro ,(symbolicate name '/error) (control-string &rest args)
+           `(log:error '(,',logger-name) ,control-string ,@args))
+
+         (defun ,(symbolicate name '/level) (&optional (level nil level-provided-p))
+           (let ((logger (log:category '(,logger-name))))
+             (if level-provided-p
+                 (log:config logger level)
+                 (log4cl:effective-log-level logger))))))))
