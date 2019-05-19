@@ -83,3 +83,11 @@
              (if level-provided-p
                  (log:config logger level)
                  (log4cl:effective-log-level logger))))))))
+
+
+(defun getenv (name)
+  (uiop:getenv name))
+
+
+(defun (setf getenv) (value name)
+  (setf (uiop:getenv name) value))
