@@ -19,7 +19,7 @@
            #:read-file-into-string
            #:read-file-into-byte-vector
            #:read-stream-content-into-string
-           #:write-stream-content-into-string
+           #:read-stream-content-into-byte-vector
            #:nconcf
            #:appendf
            #:nunionf
