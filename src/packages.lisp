@@ -55,7 +55,9 @@
            #:class-name-of
            #:dolines
            #:parent
+           #:adopted
            #:adopt
+           #:abandoned
            #:abandon
            #:abandon-all
            #:dochildren

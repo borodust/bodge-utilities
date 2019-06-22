@@ -7,23 +7,36 @@
   ((children :initform '() :reader children-of)))
 
 
+(defgeneric adopted (child parent)
+  (:method (child parent) (declare (ignore child parent))))
+
+
 (defgeneric adopt (parent child)
   (:method ((this parent) child)
     (with-slots (children) this
-      (nconcf children (list child)))))
+      (prog1 (nconcf children (list child))
+        (adopted child this)))))
+
+
+(defgeneric abandoned (child parent)
+  (:method (child parent) (declare (ignore child parent))))
 
 
 (defgeneric abandon (parent child)
   (:method ((this parent) child)
     (with-slots (children) this
-      (deletef children child))))
+      (prog1 (deletef children child)
+        (abandoned child this)))))
 
 
 (defgeneric abandon-all (parent)
   (:method ((this parent))
     (with-slots (children) this
       (prog1 children
-        (setf children nil)))))
+        (unwind-protect
+             (loop for child in children
+                   do (abandoned child this))
+          (setf children nil))))))
 
 
 (defmacro dochildren ((var parent) &body body)
@@ -52,18 +65,18 @@
 
 (defmacro parent-tree ((parent &optional child-ctor) &body children)
   (with-gensyms (ctor)
-    (labels ((expand-child (root)
-               (unless (listp root)
-                 (error "Child descriptor must be a list, but got ~A" root))
-               (with-gensyms (parent)
-                 (destructuring-bind (child-class &rest initargs-and-children) root
+    (labels ((expand-child (parent child)
+               (unless (listp child)
+                 (error "Child descriptor must be a list, but got ~A" child))
+               (with-gensyms (child-instance)
+                 (destructuring-bind (child-class &rest initargs-and-children) child
                    (multiple-value-bind (initargs children)
                        (bodge-util:parse-initargs-and-list initargs-and-children)
-                     `(let ((,parent (funcall ,ctor ',child-class ,@initargs)))
+                     `(let ((,child-instance (funcall ,ctor ',child-class ,@initargs)))
+                        (adopt ,parent ,child-instance)
                         ,@(loop for child in children
-                                collect `(adopt ,parent ,(expand-child child)))
-                        ,parent))))))
+                                collect (expand-child child-instance child))))))))
       `(prog1 ,parent
          (let ((,ctor (or ,child-ctor #'make-instance)))
-           ,@(loop for child in (mapcar #'expand-child children)
-                   collect `(adopt ,parent ,child)))))))
+           ,@(loop for child in children
+                   collect (expand-child parent child)))))))
