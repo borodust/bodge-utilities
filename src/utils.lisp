@@ -31,6 +31,9 @@
                                             (in-development-mode
                                               (raise-ignorable e))
                                             (return-from skippable))))
+                     ;; Don't interfere with SBCL step debugging process
+                     #+sbcl
+                     (sb-ext:step-condition (lambda (e) (declare (ignore e))))
                      (t (lambda (e)
                           (with-error-report-string (error-text) e
                             (log:warn "~A" error-text)))))
